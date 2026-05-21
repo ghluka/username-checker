@@ -4,13 +4,15 @@ Checks if usernames are available on a bunch of websites.
 [![GitHub license](https://img.shields.io/github/license/ghluka/username-availability-checker)](LICENSE)
 
 > [!WARNING]  
-> However unlikely, most if not all services serve the right to ban you from using their service for abusing their API. **Use this at your own risk.** I am not liable for any problems/consequences that may arise from using this program. This program solely serves as a proof of concept.
+> Most services serve the right to ban you from using their service for abusing their API. Use this at your own risk, make sure you have read the ToS of the supported websites and understand before using.
 
 ## ⚙️ Running
 
 Simply install all the requirements and run the main script!
 
 ```sh
+$ cd src
+
 # Install dependencies
 $ pip install -r requirements.txt
 
@@ -18,7 +20,7 @@ $ pip install -r requirements.txt
 $ python3 main.py
 ```
 
-## 📃 Supported websites <!-- Websites start -->[13 total]
+## 📃 Supported websites
 
 - [Chess.com](https://chess.com/)
 - [Github](https://github.com/)
@@ -28,16 +30,14 @@ $ python3 main.py
 - [Minecraft](https://minecraft.net/)
 - [Replit](https://repl.it/)
 - [Roblox](https://roblox.com/)
-- [Solo.to](https://solo.to/)
 - [Soundcloud](https://soundcloud.com/)
-- [Speedrun.com](https://speedrun.com/)
 - [Steam](https://soundcloud.com/)
-- [Twitch](https://twitch.tv/)
-
-<!-- Websites end -->
 
 ## 🖇️ Proxy support
 
-We allow the use of proxies, however, if you use public proxies you'll likely encounter an infinite ratelimit from hundreds or thousands of people using the same proxy. Proxies can dramatically speed up or slow down the process depending on their quality.
+Proxies should be stored in a format in a `protocol://ip:port` format, for example:
 
-Proxies should be stored in a format in a `protocol://ip:port` format.
+```
+http://127.0.0.1:8080
+socks5h://127.0.0.1:9050
+```

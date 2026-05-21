@@ -1,33 +1,64 @@
-"""Proxy utils.
-"""
+from collections.abc import Iterable
+
 import httpx
 from colorama import Fore
 
+TEST_URL = "https://httpbin.io/ip"
+TIMEOUT = 5.0
 
-def test_proxy(proxy:str) -> bool:
-    """Tests the validity of a proxy."""
-    proxies = {"http://":f"{proxy}", "https://":f"{proxy}"}
+
+def build_mounts(proxy: str) -> dict:
+    transport = httpx.HTTPTransport(proxy=proxy)
+
+    return {
+        "http://": transport,
+        "https://": transport,
+    }
+
+
+def test_proxy(proxy: str) -> bool:
+    proxy = proxy.strip()
 
     try:
-        with httpx.Client(verify=False, proxies=proxies) as client:
-            _ = client.get("https://httpbin.io/ip").json()
+        with httpx.Client(
+            mounts=build_mounts(proxy),
+            timeout=TIMEOUT,
+            verify=False,
+        ) as client:
+
+            response = client.get(TEST_URL)
+            response.raise_for_status()
+
             return True
-    except:
+
+    except (
+        httpx.ConnectError,
+        httpx.ProxyError,
+        httpx.TimeoutException,
+        httpx.HTTPStatusError,
+    ):
         return False
 
 
-def get_proxy(proxies:list) -> dict:
-    """Gets a valid proxy from a list of proxies."""
-    for proxy in proxies:
-        proxies.remove(proxy)
-        proxy = proxy.removesuffix("\n")
-        if test_proxy(proxy):
-            return {"http://":f"{proxy}", "https://":f"{proxy}"}
+def get_proxy(proxies: Iterable[str]) -> str:
+    for proxy in map(str.strip, proxies):
 
-    print(f"{Fore.RED}No valid proxy in your provided list! Make sure you're using HTTP proxies and not SOCK5.{Fore.RESET}")
-    exit(1)
+        if test_proxy(proxy):
+            return proxy
+
+    raise RuntimeError(
+        f"{Fore.RED}"
+        "No valid proxy found! "
+        "Ensure the proxies are alive and correctly formatted."
+        f"{Fore.RESET}"
+    )
 
 
 if __name__ == "__main__":
-    test = "".splitlines() # put an IP to test there
-    print(get_proxy(test))
+
+    proxies = [
+        "http://127.0.0.1:8080",
+        "socks5h://127.0.0.1:9050",
+    ]
+
+    print(get_proxy(proxies))

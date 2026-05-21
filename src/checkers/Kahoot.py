@@ -3,7 +3,6 @@
 import time
 
 import httpx
-from httpx._models import Response
 
 from base.checker import BaseChecker
 
@@ -11,17 +10,21 @@ from base.checker import BaseChecker
 class Checker(BaseChecker):
     ENDPOINT = "https://create.kahoot.it/rest/users/usernameavailable"
 
-    @BaseChecker.check.register
-    def _(self, username:str, proxies:str="") -> str|None:
-        proxies = self.get_proxy(proxies)
+    def check(self, username: str, proxies: str = "") -> str | None:
+        proxy = self.get_proxy(proxies)
+        mounts = self.build_mounts(proxy) if proxy else None
 
-        headers={"x-kahoot-user-identifier": username}
+        headers = {"x-kahoot-user-identifier": username}
 
-        r = Response(429)
-        while r.status_code == 429:
-            with httpx.Client(verify=False, proxies=proxies) as client:
-                r = client.get(self.ENDPOINT, headers=headers)
-            if r.status_code == 429:
-                time.sleep(self.RATELIMIT_TIMEOUT)
+        while True:
+            try:
+                with httpx.Client(verify=False, mounts=mounts, timeout=10.0) as client:
+                    r = client.get(self.ENDPOINT, headers=headers)
+            except (httpx.ProxyError, httpx.ConnectError, httpx.TimeoutException):
+                return None
+
+            if r.status_code != 429:
+                break
+            time.sleep(self.RATELIMIT_TIMEOUT)
 
         return username if r.json().get("isUsernameAvailable") else None

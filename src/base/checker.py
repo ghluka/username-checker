@@ -9,8 +9,13 @@ class BaseChecker:
     ENDPOINT = ""
     RATELIMIT_TIMEOUT = 0.5
 
-    @singledispatchmethod
-    def check(self) -> str|None:
+    USER_AGENT = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0"
+    )
+
+    def check(self, username:str, proxies:str="") -> str|None:
         """Checks if username is available."""
         raise NotImplementedError
 
@@ -19,3 +24,11 @@ class BaseChecker:
         if len(proxy_path) == 0:
             return {}
         return get_proxy(proxy_path)
+
+    def build_mounts(self, proxy: str) -> dict:
+        transport = httpx.HTTPTransport(proxy=proxy)
+
+        return {
+            "http://": transport,
+            "https://": transport,
+        }
