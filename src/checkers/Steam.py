@@ -1,29 +1,30 @@
+"""https://soundcloud.com/
+"""
+import time
 
-import httpx, random, colorama, time
+import httpx
+from httpx._models import Response
 
-endpoint = "https://steamcommunity.com/id/"
+from base.checker import BaseChecker
 
-def check(username:str, proxy:str=""):
-    if proxy != "":
-        r = httpx.get(endpoint+username, proxies={proxy.split('|')[0]:proxy.split('|')[1].strip('\n')})
-    else:
-        r = httpx.get(endpoint+username)
-    if r.status_code == 429:
-        time.sleep(5)
-        return check(username=username, proxy=proxy)
-    elif "The specified profile could not be found." in r.text:
-        return username
-    return None
 
-def run(usernames_path:str="", proxies_path:str="", usernames:str=""):
-    valid = []
-    if usernames != "":
-        print(colorama.Fore.RED+colorama.Style.BRIGHT+"\n! PLEASE UPDATE YOUR LAUNCHER !"+colorama.Style.RESET_ALL+"\nWe will continue to provide backwards compatability to previous launcher versions, however we remind you to update, as you are missing out on key features, such as multi-threading and improved speeds!\n")
-        open("hits.txt", "w").write("\n".join(run(usernames_path=usernames, proxies_path=proxies_path)))
-        return
-    for username in open(usernames_path):
-        username = username.strip('\n')
-        hit = check(username) if proxies_path=="" else check(username, random.choice(open(proxies_path)))
-        if hit == username:
-            valid.append(username)
-    return valid
+class Checker(BaseChecker):
+    ENDPOINT = "https://steamcommunity.com/id/"
+
+    @BaseChecker.check.register
+    def _(self, username:str, proxies:str="") -> str|None:
+        proxies = self.get_proxy(proxies)
+
+        if not 2 < len(username) <= 32:
+            return None
+        elif not all(c.isalnum() and c.isascii() or c in "-_" for c in username):
+            return None
+
+        r = Response(429)
+        while r.status_code == 429:
+            with httpx.Client(verify=False, proxies=proxies) as client:
+                r = client.get(f"{self.ENDPOINT}{username}")
+            if r.status_code == 429:
+                time.sleep(self.RATELIMIT_TIMEOUT)
+
+        return username if "The specified profile could not be found." in r.text else None
