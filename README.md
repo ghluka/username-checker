@@ -1,7 +1,7 @@
 # 📛 Username Availability Checker
 Checks if usernames are available on a bunch of websites.
 
-[![GitHub license](https://img.shields.io/github/license/ghluka/username-availability-checker)](LICENSE)
+[![GitHub license](https://img.shields.io/github/license/ghluka/username-checker)](LICENSE)
 
 > [!WARNING]  
 > Most services serve the right to ban you from using their service for abusing their API. Use this at your own risk, make sure you have read the ToS of the supported websites and understand before using.
